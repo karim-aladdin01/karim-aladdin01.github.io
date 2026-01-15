@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_tabs/categories.md",
+                "file": "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "categories"
+              "title": "2026-01-16-Web-Cache-Poisoning.md"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_tabs/categories.md",
+                "file": "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for categories"
+              "title": "Backlinks for 2026-01-16-Web-Cache-Poisoning.md"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_tabs/categories.md",
+                "file": "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from categories"
+              "title": "Outgoing links from 2026-01-16-Web-Cache-Poisoning.md"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_tabs/categories.md",
+                "file": "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of categories"
+              "title": "Outline of 2026-01-16-Web-Cache-Poisoning.md"
             }
           }
         ]
@@ -186,6 +186,8 @@
   },
   "active": "1a7ece6f44ebca83",
   "lastOpenFiles": [
+    "_tabs/categories.md",
+    "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
     "README.md"
   ]
 }
