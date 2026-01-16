@@ -66,8 +66,8 @@ Many websites and CDNs perform various transformations on keyed components when 
 These transformations may introduce a few unexpected quirks. These are primarily based around <span style="color:rgb(0, 112, 192)">discrepancies between the data that is written to the cache key and the data that is passed into the application code</span>, even though it all stems from the same input. These cache key flaws can be exploited to poison the cache via inputs that may initially appear unusable.
 
 ### Unkeyed port
-If the Host is part of the cache-key, but the port is excluded, then you can perform a DOS attack.
-Consider the case where a redirect URL is dynamically generated based on the `Host` header.
+If the Host is part of the cache-key but the port is excluded from it, then you can perform a **DOS** attack.
+- Consider the case where a redirect URL is dynamically generated based on the `Host` header.
 ```http
 GET / HTTP/1.1
 Host: vulnerable-website.com
@@ -82,6 +82,23 @@ Cache-Status: miss
 GET / HTTP/1.1
 Host: vulnerable-website.com:3879
 ```
- - Now, All the users who browse to https://vulnerable-website.com will be redirected to https://vulnerable-website.com:3879/en , which is a dud port.  
+ - Now, All the users who browse to `https://vulnerable-website.com` will be redirected to `https://vulnerable-website.com:3879/en` , which is a dud port.  
 
-### 
+### Web cache poisoning via an unkeyed query string
+Excluding the query string from the cache key can actually make these reflected XSS vulnerabilities even more severe.
+Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducing the victim to visit a maliciously crafted URL</span>. However, poisoning the cache via an unkeyed query string would cause the payload to be served to users who visit what would otherwise be a perfectly normal URL. This has the potential to impact a far greater number of victims with no further interaction from the attacker.
+<br/>
+- Description: This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome. To solve the lab, poison the home page with a response that executes `alert(1)` in the victim's browser.
+##### Solution
+- First, observe the cache oracle via the headers:
+	![](../assets/img/Pasted%20image%2020260116235934.png)
+- Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe the you never get a `miss`, which means that the query param is unkeyed.
+- Try probing the request till you get a cache miss. I tried the Cookie, Accept, Accept-Encoding headers but none of them worked. So, I added `Origin: example.com` and I got a `miss`
+	![](../assets/img/Pasted%20image%2020260117001811.png)
+- You can see that the query param `cb=cache-buster` is reflected in the response. Let's try to close the link tag and inject a script tag to trigger the alert. The working payload is:
+```html
+?cb=test'/><script>alert(1)</script>
+```
+- Right-click on the request from Burp and select `request in browser` then paste the link in the browser and observe that the alert pops up.
+  Note: Copying the url directly won't work as this doesn't set the origin header.
+- Now, remove the origin header and re-poison the cache and the lab should be solved.
