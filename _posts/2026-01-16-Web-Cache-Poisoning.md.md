@@ -68,6 +68,7 @@ These transformations may introduce a few unexpected quirks. These are primarily
 ### Unkeyed port
 If the Host is part of the cache-key but the port is excluded from it, then you can perform a **DOS** attack.
 - Consider the case where a redirect URL is dynamically generated based on the `Host` header.
+
 ```http
 GET / HTTP/1.1
 Host: vulnerable-website.com
@@ -78,6 +79,7 @@ Location: https://vulnerable-website.com/en
 Cache-Status: miss
 ```
 - You can poison the cache by appending a dummy port at the end of the `HOST`:
+
 ```http
 GET / HTTP/1.1
 Host: vulnerable-website.com:3879
@@ -89,7 +91,7 @@ Excluding the query string from the cache key can actually make these reflected 
 Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducing the victim to visit a maliciously crafted URL</span>. However, poisoning the cache via an unkeyed query string would cause the payload to be served to users who visit what would otherwise be a perfectly normal URL. This has the potential to impact a far greater number of victims with no further interaction from the attacker.
 <br/>
 - Description: This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome. To solve the lab, poison the home page with a response that executes `alert(1)` in the victim's browser.
-##### Solution
+#### Solution
 - First, observe the cache oracle via the headers:
 	![](../assets/img/Pasted%20image%2020260116235934.png)
 - Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe the you never get a `miss`, which means that the query param is unkeyed.
