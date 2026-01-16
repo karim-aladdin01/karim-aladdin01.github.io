@@ -14,7 +14,7 @@ icon: fas fa-info-circle
 	5. **Cache Server:** Front-end (e.g., CDN like Akamai, Cloudflare or reverse proxies like Nginx or Varnish).
 	6. **TTL (Time To Live)**: How long poisoned content remains cached
 
-### <span style="color:rgb(255, 0, 0)">The golden rule: Find an unkeyed input that influences the response, poison it, and let the cache do the rest and the exact steps to follow are:</span>
+# <span style="color:rgb(255, 0, 0)">The golden rule: Find an unkeyed input that influences the response, poison it, and let the cache do the rest and the exact steps to follow are:</span>
 1. Identify a suitable cache oracle
 2. Add a cache buster (in some cases, you may not be able to find it and you will do your work on the original response served to other users. So, be careful in such cases)
 	![](../assets/img/Pasted%20image%2020260102175425.png)
@@ -27,5 +27,6 @@ icon: fas fa-info-circle
 5. Elicit a harmful response & inject into cache
 
 ---
+# Exploiting cache design flaws
 
-
+# Exploiting cache implementation flaws
