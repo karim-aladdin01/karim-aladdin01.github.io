@@ -51,7 +51,7 @@ Origin: https://cachebuster.vulnerable-website.com
 3. Identify unkeyed inputs with Param Miner
 	![](../assets/img/Pasted%20image%2020260102180805.png)
 	![](../assets/img/Pasted%20image%2020260102175211.png)
-	
+
 4. Explore input potential
 5. Elicit a harmful response & inject into cache
 
