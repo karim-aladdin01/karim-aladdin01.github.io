@@ -32,9 +32,9 @@ Web application stores data in a database. Reading data from the database needs 
 <br/>
 # <span style="color:rgb(255, 0, 0)">The golden rule: Find an unkeyed input that influences the response, poison it, and let the cache do the rest and the exact steps to follow are:</span>
 1. Identify a suitable cache oracle: Identify a page or an endpoint that provides feedback about the cache's behavior and whether the response comes from the cache server or from the backend server such as `X-Cache: Hit` & `X-Cache: Miss`. If you identify a 3rd party like Akami or Cloudflare, you may check the documentation to know how the default cache key is constructed and you can find some tricks to know about the cache-key such as:
-	- Akami-based websites: may support the header `Pragma: akamai-x-get-cache-key`which displays the cache-key in the response headers. The default cache keys of Akami: 
+- Akami-based websites: may support the header `Pragma: akamai-x-get-cache-key`which displays the cache-key in the response headers. The default cache keys of Akami: 
 	![](../assets/img/Pasted%20image%2020260116201623.png)
-	- Default Cache key of Cloudflare
+- Default Cache key of Cloudflare
 	![](../assets/img/Pasted%20image%2020260116201734.png)
 
 2. Add a cache buster (in some cases, you may not be able to find it and you will do your work on the original response served to other users. So, be careful in such cases)
