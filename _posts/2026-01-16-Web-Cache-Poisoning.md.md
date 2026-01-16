@@ -25,6 +25,7 @@ icon: fas fa-info-circle
 	
 4. Explore input potential
 5. Elicit a harmful response & inject into cache
+
 ---
 
 
