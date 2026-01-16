@@ -17,11 +17,12 @@ icon: fas fa-info-circle
 ### <span style="color:rgb(255, 0, 0)">The golden rule: Find an unkeyed input that influences the response, poison it, and let the cache do the rest and the exact steps to follow are:</span>
 1. Identify a suitable cache oracle
 2. Add a cache buster (in some cases, you may not be able to find it and you will do your work on the original response served to other users. So, be careful in such cases)
-![[Pasted image 20260102175425.png]]
+	![](../assets/img/Pasted%20image%2020260102175425.png)
 3. Identify unkeyed inputs with Param Miner
-![[Pasted image 20260102180805.png]]
-
-![[Pasted image 20260102175211.png]]
+	![](../assets/img/Pasted%20image%2020260102180805.png)
+	
+	![](../assets/img/Pasted%20image%2020260102175211.png)
+	
 4. Explore input potential
 5. Elicit a harmful response & inject into cache
 
