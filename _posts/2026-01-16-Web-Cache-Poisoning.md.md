@@ -63,6 +63,7 @@ Many websites and CDNs perform various transformations on keyed components when 
 - Filtering out specific query parameters or even excluding the whole query string 
 - Normalizing input in keyed components
 - Removing the port from the `Host` header
+<br/>
 These transformations may introduce a few unexpected quirks. These are primarily based around <span style="color:rgb(0, 112, 192)">discrepancies between the data that is written to the cache key and the data that is passed into the application code</span>, even though it all stems from the same input. These cache key flaws can be exploited to poison the cache via inputs that may initially appear unusable.
 
 ### Unkeyed port
@@ -89,13 +90,13 @@ Host: vulnerable-website.com:3879
 Excluding the query string from the cache key can actually make these reflected XSS vulnerabilities even more severe.
 Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducing the victim to visit a maliciously crafted URL</span>. However, poisoning the cache via an unkeyed query string would cause the payload to be served to users who visit what would otherwise be a perfectly normal URL. This has the potential to impact a far greater number of victims with no further interaction from the attacker.
 <br/>
-- Description: This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome. To solve the lab, poison the home page with a response that executes `alert(1)` in the victim's browser.
+- **Lab Description**: This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome. To solve the lab, poison the home page with a response that executes `alert(1)` in the victim's browser.
 <br/>
 <br/>
 #### 💡<span style="color:rgb(0, 176, 80)">Solution</span>
 - First, observe the cache oracle via the headers:
 	![](../assets/img/Pasted%20image%2020260116235934.png)
-- Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe the you never get a `miss`, which means that the query param is unkeyed.
+- Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe that you never get a `miss`, which means that the query param is unkeyed.
 - Try probing the request till you get a cache miss. I tried the Cookie, Accept, Accept-Encoding headers but none of them worked. So, I added `Origin: example.com` and I got a `miss`
 	![](../assets/img/Pasted%20image%2020260117001811.png)
 - You can see that the query param `cb=cache-buster` is reflected in the response. Let's try to close the link tag and inject a script tag to trigger the alert. The working payload is:
@@ -110,13 +111,13 @@ Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducin
 ### Web cache poisoning via an unkeyed query parameter
 So far we've seen that on some websites, the entire query string is excluded from the cache key. But some websites only exclude specific query parameters that are not relevant to the back-end application, such as parameters for analytics or serving targeted advertisements. UTM parameters like `utm_content` are good candidates to check during testing.
 <br/>
-- Description: This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. A user regularly visits this site's home page using Chrome. To solve the lab, poison the cache with a response that executes `alert(1)` in the victim's browser.
+- **Lab Description**: This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. A user regularly visits this site's home page using Chrome. To solve the lab, poison the cache with a response that executes `alert(1)` in the victim's browser.
 <br/>
 <br/>
 #### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - First, observe the cache oracle via the headers:
 	![](../assets/img/Pasted%20image%2020260116235934.png)
-- Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe the you get a `miss`, which means it's a cache buster.
+- Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe that you get a `miss`, which means it's a cache buster.
 - Use `param miner`  to get unkeyed inputs by guessing query params and observe that the  `utm_content` appears in the output.
 	![](../assets/img/Pasted%20image%2020260117010040.png)
 - As expected, the value of `utm_content` is reflected in the response:
@@ -130,3 +131,6 @@ So far we've seen that on some websites, the entire query string is excluded fro
 
 ----
 ### Cache parameter cloaking
+Abusing discrepancies between how the cache and the origin servers use characters and strings as delimiters to separate parameters and strip unwanted ones.
+
+For example, it's known that a query param is placed after `?` or `&` in the query string, but Ruby accepts `;` as a delimiter as well. So, 
