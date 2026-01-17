@@ -133,4 +133,54 @@ So far we've seen that on some websites, the entire query string is excluded fro
 ### Cache parameter cloaking
 Abusing discrepancies between how the cache and the origin servers use characters and strings as delimiters to separate parameters and strip unwanted ones.
 
-For example, it's known that a query param is placed after `?` or `&` in the query string, but Ruby accepts `;` as a delimiter as well. So, 
+For example, it's known that a query param is placed after `?` or `&` in the query string, but Ruby accepts `;` as a delimiter as well. 
+<br/>
+Consider the following request:
+```http
+GET /?keyed_param=abc&excluded_param=123;keyed_param=bad-stuff-here
+```
+- As the names suggest, `keyed_param` is included in the cache key, but `excluded_param` is not. Many caches will only interpret this as two parameters, delimited by the ampersand:
+	1. `keyed_param=abc`
+	2. `excluded_param=123;keyed_param=bad-stuff-here`
+- Once the parsing algorithm removes the `excluded_param`, the cache key will only contain `keyed_param=abc`
+<br/>
+- On the back-end, however, Ruby on Rails sees the semicolon and splits the query string into three separate parameters:
+	1. `keyed_param=abc`
+	2. `excluded_param=123`
+	3. `keyed_param=bad-stuff-here`
+But now there is a duplicate `keyed_param`. This is where the second quirk comes into play. If there are duplicate parameters, each with different values, <span style="color:rgb(0, 112, 192)">Ruby on Rails gives precedence to the final occurrence</span>. The end result is that the cache key contains an innocent, expected parameter value, allowing the cached response to be served as normal to other users. <span style="color:rgb(255, 0, 0)">On the back-end, however, the same parameter has a completely different value, which is our injected payload.</span> 
+<br/>
+
+This exploit can be especially powerful if it gives you control over a function that will be executed. For example, if a website is using JSONP to make a cross-domain request, this will often contain a `callback` parameter to execute a given function on the returned data:
+```http
+GET /jsonp?callback=innocentFunction
+```
+
+In this case, you could use these techniques to override the expected callback function and execute arbitrary JavaScript instead.
+<br/>
+- **Lab Description**: This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. There is also inconsistent parameter parsing between the cache and the back-end. A user regularly visits this site's home page using Chrome. To solve the lab, use the parameter cloaking technique to poison the cache with a response that executes `alert(1)` in the victim's browser.
+<br/>
+<br/>
+#### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- First, I identified a cache oracle from the response headers
+- I appended `?cb=cache-buster` to the homepage and I got a `miss` so it's a cache buster
+- I used `param miner` to guess query params and it identified `utm_content` 
+	![](../assets/img/Pasted%20image%2020260117220308.png)
+- let's try to break out of the link tag and inject a script tag
+	![](../assets/img/Pasted%20image%2020260117220434.png)
+	- It seems that the output is encoded.
+- We need to search for another endpoint, this one `/js/geolocate.js?callback=setCountryCookie` looks interesting as the `setCountryCookie` is reflected in the response
+	![](../assets/img/Pasted%20image%2020260117221623.png)
+- Since it's a js file, we don't need a script tag. We only need to inject `alert(1)` directly
+	![](../assets/img/Pasted%20image%2020260117222646.png)
+- The `alert(1)` is reflected as intended, but we got a `X-Cache: miss` which means that the `callback` param is a keyed input.
+- What if we try `parameter pollution`?
+	![](../assets/img/Pasted%20image%2020260117223313.png)
+- We still get a `X-Cache: miss`, which means that the 2nd callback param can still be seen by the caching server. So, we need to figure out some way to <span style="color:rgb(255, 0, 0)">hide it from the front-end caching server</span> ,aka making it `unkeyed input`. Let's try adding the `utm_content`, We still get a `X-Cache: miss`
+	![](../assets/img/Pasted%20image%2020260117223706.png)
+- To make sure that the `callback=alert(1)` is still a `keyed input` change `alert(1)` to `alert(2)` and if it's `unkeyed` you should get the same response aka a `X-Cache: hit`, but unfortunately you get a `X-Cache: miss`
+	![](../assets/img/Pasted%20image%2020260117224140.png)
+- Here where the `parameter cloaking` technique comes into play --> You get a `X-Cache: hit` again and again when you hit the `send` button in Burpsuite 
+	![](../assets/img/Pasted%20image%2020260117224331.png)
+- Now, wait till the `Age: 35` and hit send to poison the cache and you should get a `X-Cache: hit`  
+	![](../assets/img/Pasted%20image%2020260117225029.png)
