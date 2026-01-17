@@ -67,7 +67,8 @@ These transformations may introduce a few unexpected quirks. These are primarily
 
 ### Unkeyed port
 If the Host is part of the cache-key but the port is excluded from it, then you can perform a **DOS** attack.
-- Consider the case where a redirect URL is dynamically generated based on the `Host` header
+- Consider the case where a redirect URL is dynamically generated based on the `Host` header.
+
 ```http
 GET / HTTP/1.1
 Host: vulnerable-website.com
@@ -77,6 +78,7 @@ Location: https://vulnerable-website.com/en
 Cache-Status: miss
 ```
 - You can poison the cache by appending a dummy port at the end of the `HOST`:
+
 ```http
 GET / HTTP/1.1
 Host: vulnerable-website.com:3879
@@ -90,7 +92,7 @@ Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducin
 - Description: This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome. To solve the lab, poison the home page with a response that executes `alert(1)` in the victim's browser.
 <br/>
 <br/>
-#### <span style="color:rgb(0, 176, 80)">Solution</span>
+#### 💡<span style="color:rgb(0, 176, 80)">Solution</span>
 - First, observe the cache oracle via the headers:
 	![](../assets/img/Pasted%20image%2020260116235934.png)
 - Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe the you never get a `miss`, which means that the query param is unkeyed.
@@ -103,6 +105,7 @@ Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducin
 - Right-click on the request from Burp and select `request in browser` then paste the link in the browser and observe that the alert pops up.
   Note: Copying the url directly won't work as this doesn't set the origin header.
 - Now, remove the origin header and re-poison the cache and the lab should be solved.
+
 ----
 ### Web cache poisoning via an unkeyed query parameter
 So far we've seen that on some websites, the entire query string is excluded from the cache key. But some websites only exclude specific query parameters that are not relevant to the back-end application, such as parameters for analytics or serving targeted advertisements. UTM parameters like `utm_content` are good candidates to check during testing.
@@ -110,7 +113,7 @@ So far we've seen that on some websites, the entire query string is excluded fro
 - Description: This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. A user regularly visits this site's home page using Chrome. To solve the lab, poison the cache with a response that executes `alert(1)` in the victim's browser.
 <br/>
 <br/>
-#### <span style="color:rgb(0, 176, 80)">Solution</span>
+#### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - First, observe the cache oracle via the headers:
 	![](../assets/img/Pasted%20image%2020260116235934.png)
 - Try adding a cache buster to the homepage `GET /?cb=cache-buster` and observe the you get a `miss`, which means it's a cache buster.
@@ -124,4 +127,6 @@ So far we've seen that on some websites, the entire query string is excluded fro
 ```
 - Copy URL and paste it in the browser and observe that the alert pops up
 - Remove the cache-buster, re-poison the cache and the lab should be solved
+
 ----
+### Cache parameter cloaking
