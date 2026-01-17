@@ -59,10 +59,12 @@ Origin: https://cachebuster.vulnerable-website.com
 # Exploiting cache design flaws
 
 # Exploiting cache implementation flaws
-Many websites and CDNs perform various transformations on keyed components when they are saved in the cache key. This can include:
-- Filtering out specific query parameters or even excluding the whole query string 
-- Normalizing input in keyed components
-- Removing the port from the `Host` header
+- Many websites and CDNs perform various transformations on keyed components when they are saved in the cache key. This can include:
+	- Filtering out specific query parameters or even excluding the whole query string 
+	- Normalizing input in keyed components
+	- Removing the port from the `Host` header
+	- Removing the Request method (results in fat GET request)
+
 <br/>
 These transformations may introduce a few unexpected quirks. These are primarily based around <span style="color:rgb(0, 112, 192)">discrepancies between the data that is written to the cache key and the data that is passed into the application code</span>, even though it all stems from the same input. These cache key flaws can be exploited to poison the cache via inputs that may initially appear unusable.
 
@@ -123,7 +125,7 @@ So far we've seen that on some websites, the entire query string is excluded fro
 - As expected, the value of `utm_content` is reflected in the response:
 	![](../assets/img/Pasted%20image%2020260117010243.png)
 - Try this payload:
-```
+```html
 /?cb=cache-buster&utm_content=test'/><script>alert(1)</script>
 ```
 - Copy URL and paste it in the browser and observe that the alert pops up
@@ -148,10 +150,11 @@ GET /?keyed_param=abc&excluded_param=123;keyed_param=bad-stuff-here
 	1. `keyed_param=abc`
 	2. `excluded_param=123`
 	3. `keyed_param=bad-stuff-here`
+
 But now there is a duplicate `keyed_param`. This is where the second quirk comes into play. If there are duplicate parameters, each with different values, <span style="color:rgb(0, 112, 192)">Ruby on Rails gives precedence to the final occurrence</span>. The end result is that the cache key contains an innocent, expected parameter value, allowing the cached response to be served as normal to other users. <span style="color:rgb(255, 0, 0)">On the back-end, however, the same parameter has a completely different value, which is our injected payload.</span> 
 <br/>
 
-This exploit can be especially powerful if it gives you control over a function that will be executed. For example, if a website is using JSONP to make a cross-domain request, this will often contain a `callback` parameter to execute a given function on the returned data:
+- This exploit can be especially powerful if it gives you control over a function that will be executed. For example, if a website is using JSONP to make a cross-domain request, this will often contain a `callback` parameter to execute a given function on the returned data:
 ```http
 GET /jsonp?callback=innocentFunction
 ```
@@ -176,7 +179,7 @@ In this case, you could use these techniques to override the expected callback f
 - The `alert(1)` is reflected as intended, but we got a `X-Cache: miss` which means that the `callback` param is a keyed input.
 - What if we try `parameter pollution`?
 	![](../assets/img/Pasted%20image%2020260117223313.png)
-- We still get a `X-Cache: miss`, which means that the 2nd callback param can still be seen by the caching server. So, we need to figure out some way to <span style="color:rgb(255, 0, 0)">hide it from the front-end caching server</span> ,aka making it `unkeyed input`. Let's try adding the `utm_content`, We still get a `X-Cache: miss`
+- We still get a `X-Cache: miss`, which means that the 2nd callback param can still be seen by the caching server. So, we need to figure out some way to <span style="color:rgb(255, 0, 0)">hide it from the front-end caching server</span> ,aka making it `unkeyed input`. Let's try adding the `utm_content`, we still get a `X-Cache: miss`
 	![](../assets/img/Pasted%20image%2020260117223706.png)
 - To make sure that the `callback=alert(1)` is still a `keyed input` change `alert(1)` to `alert(2)` and if it's `unkeyed` you should get the same response aka a `X-Cache: hit`, but unfortunately you get a `X-Cache: miss`
 	![](../assets/img/Pasted%20image%2020260117224140.png)
@@ -184,3 +187,89 @@ In this case, you could use these techniques to override the expected callback f
 	![](../assets/img/Pasted%20image%2020260117224331.png)
 - Now, wait till the `Age: 35` and hit send to poison the cache and you should get a `X-Cache: hit`  
 	![](../assets/img/Pasted%20image%2020260117225029.png)
+
+-----
+### Web cache poisoning via a fat GET request
+- In select cases, the <span style="color:rgb(0, 112, 192)">HTTP method may not be keyed</span>. This might allow you to poison the cache with a `POST` request containing a malicious payload in the body. Your payload would then even be served in response to users' `GET` requests. Although this scenario is pretty rare, you can sometimes achieve a similar effect by simply adding a body to a `GET` request to create a "fat" `GET` request: `GET /?param=innocent HTTP/1.1 … param=bad-stuff-here`
+
+In this case, the <span style="color:rgb(0, 112, 192)">cache key would be based on the request line</span>, but <span style="color:rgb(255, 0, 0)">the server-side value of the parameter would be taken from the body.</span>
+
+- This is only possible if a website accepts `GET` requests that have a body, but there are potential workarounds. You can sometimes encourage "fat `GET`" handling by overriding the HTTP method, for example:
+```http
+GET /?param=innocent HTTP/1.1 
+Host: innocent-website.com 
+X-HTTP-Method-Override: POST 
+… 
+param=bad-stuff-here
+```
+As long as the `X-HTTP-Method-Override` header is unkeyed, you could submit a pseudo-`POST` request while preserving a `GET` cache key derived from the request line.
+
+<br/>
+- **Lab Description**: This lab is vulnerable to web cache poisoning. It accepts `GET` requests that have a body, but does not include the body in the cache key. A user regularly visits this site's home page using Chrome. To solve the lab, poison the cache with a response that executes `alert(1)` in the victim's browser.
+<br/>
+<br/>
+#### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- append `&cb=cache-buster` to the `GET /js/geolocate.js?callback=setCountryCookie` and observe that you get `X-Cache: miss`, which means that it's cache buster
+- Add `callback=alert(1)` to the `body` of the request and observe that it's reflected
+	![](../assets/img/Pasted%20image%2020260117232024.png)
+- Remove the cache buster and wait till `Age: 35`, poison the cache and the lab should be solved
+	![](../assets/img/Pasted%20image%2020260117232141.png)
+
+----
+### URL normalization
+Cache key normalization can make otherwise unexploitable reflected XSS exploitable. If the cache normalizes encoded and unencoded parameters to the same key
+```
+GET /example?param="><test>
+GET /example?param=%22%3e%3ctest%3e
+```
+ An attacker can poison the cache with an unencoded XSS payload, and when a victim requests the encoded version, the cache serves the poisoned response, causing the payload to execute.
+
+<br/>
+- **Lab Description**: This lab contains an XSS vulnerability that is not directly exploitable due to browser URL-encoding. To solve the lab, take advantage of the cache's normalization process to exploit this vulnerability. Find the XSS vulnerability and inject a payload that will execute `alert(1)` in the victim's browser. Then, deliver the malicious URL to the victim.
+<br/>
+<br/>
+#### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- After identifying a cache oracle, I added `?cb=cache-buster` to the homepage, and I got a cache `miss` which means that it's a cache buster.
+- I used `param miner` to guess for `unkeyed inputs` in the homepage, but nothing was found. Additionally, the cache buster is not reflected in the response at all.
+- In such cases we check for `URL Normalization` 
+- Instead of `GET /` , we request `GET %2f` which is the `URL-Encoded` version of the homepage
+	![](../assets/img/Pasted%20image%2020260118005206.png)
+- Now, what if the front-end caching server normalizes both the normal `/` and the encoded `%2f` versions, which means if we are able to cache the `404 Not Found` response from the backend server to the front-end caching server, then we are able to perform a `DOS` attack as any normal user fetches `GET /` will then served the poisoned version `GET %2f` as the cache server treats them as identical.
+	![](../assets/img/Pasted%20image%2020260118005908.png)
+- During the caching window, if a normal user visits the homepage
+	![](../assets/img/Pasted%20image%2020260118010153.png)
+- As the `%2f` is reflected within a `<p>` tag, what if we inject a `<script>` tag and this is a kind of XSS attacks which is trying to trigger an error results in returning `4XX or 5XX`, meanwhile our injected string is reflected and thus we can trigger an alert by injecting a malicious payload after the string that caused the error initially
+	![](../assets/img/Pasted%20image%2020260118011015.png)
+- During the caching window, which is a little bit short for this lab 10s, Copy the link as paste it in the browser
+	![](../assets/img/Pasted%20image%2020260118011714.png)
+- Now, send the `URL-encoded` version of the link to victim, which is `https://0a9700fd0465f0d681f9cfa600f30032.web-security-academy.net/%3Cscript%3Ealert(1)%3C/script%3E` and the lab should be solved.
+- Note that if you send the `un-encoded` or `normal` version of the URL to the victim, which is `https://0a9700fd0465f0d681f9cfa600f30032.web-security-academy.net%2f<script>alert(1)</script>`, the attack won't work.
+
+----
+### Cache key injection
+- Keyed headers can become exploitable via cache poisoning if cache key delimiters are not properly escaped, allowing different requests to resolve to the same cache key and serve a poisoned response. You can exploit this by first poisoning the cache with a request containing your payload in the corresponding keyed header:
+```http
+GET /path?param=123 HTTP/1.1 
+Origin: '-alert(1)-'__
+
+HTTP/1.1 200 OK 
+X-Cache-Key: /path?param=123__Origin='-alert(1)-'__ 
+
+<script>…'-alert(1)-'…</script>
+```
+- If you then induce a victim user to visit the following URL, they would be served the poisoned response:
+```http
+GET /path?param=123__Origin='-alert(1)-'__ HTTP/1.1 
+
+HTTP/1.1 200 OK 
+X-Cache-Key: /path?param=123__Origin='-alert(1)-'__ 
+X-Cache: hit 
+
+<script>…'-alert(1)-'…</script>
+```
+<br/>
+- **Lab Description**: This lab contains multiple independent vulnerabilities, including cache key injection. A user regularly visits this site's home page using Chrome. To solve the lab, combine the vulnerabilities to execute `alert(1)` in the victim's browser. Note that you will need to make use of the `Pragma: x-get-cache-key` header in order to solve this lab
+<br/>
+<br/>
+#### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- 
