@@ -64,7 +64,6 @@ Origin: https://cachebuster.vulnerable-website.com
 	- Normalizing input in keyed components
 	- Removing the port from the `Host` header
 	- Removing the Request method (results in fat GET request)
-
 <br/>
 These transformations may introduce a few unexpected quirks. These are primarily based around <span style="color:rgb(0, 112, 192)">discrepancies between the data that is written to the cache key and the data that is passed into the application code</span>, even though it all stems from the same input. These cache key flaws can be exploited to poison the cache via inputs that may initially appear unusable.
 
@@ -94,7 +93,6 @@ Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducin
 <br/>
 - **Lab Description**: This lab is vulnerable to web cache poisoning because the query string is unkeyed. A user regularly visits this site's home page using Chrome. To solve the lab, poison the home page with a response that executes `alert(1)` in the victim's browser.
 <br/>
-<br/>
 #### 💡<span style="color:rgb(0, 176, 80)">Solution</span>
 - First, observe the cache oracle via the headers:
 	![](../assets/img/Pasted%20image%2020260116235934.png)
@@ -114,7 +112,6 @@ Usually, such an attack would rely on <span style="color:rgb(255, 0, 0)">inducin
 So far we've seen that on some websites, the entire query string is excluded from the cache key. But some websites only exclude specific query parameters that are not relevant to the back-end application, such as parameters for analytics or serving targeted advertisements. UTM parameters like `utm_content` are good candidates to check during testing.
 <br/>
 - **Lab Description**: This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. A user regularly visits this site's home page using Chrome. To solve the lab, poison the cache with a response that executes `alert(1)` in the victim's browser.
-<br/>
 <br/>
 #### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - First, observe the cache oracle via the headers:
@@ -163,7 +160,6 @@ In this case, you could use these techniques to override the expected callback f
 <br/>
 - **Lab Description**: This lab is vulnerable to web cache poisoning because it excludes a certain parameter from the cache key. There is also inconsistent parameter parsing between the cache and the back-end. A user regularly visits this site's home page using Chrome. To solve the lab, use the parameter cloaking technique to poison the cache with a response that executes `alert(1)` in the victim's browser.
 <br/>
-<br/>
 #### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - First, I identified a cache oracle from the response headers
 - I appended `?cb=cache-buster` to the homepage and I got a `miss` so it's a cache buster
@@ -207,7 +203,6 @@ As long as the `X-HTTP-Method-Override` header is unkeyed, you could submit a ps
 <br/>
 - **Lab Description**: This lab is vulnerable to web cache poisoning. It accepts `GET` requests that have a body, but does not include the body in the cache key. A user regularly visits this site's home page using Chrome. To solve the lab, poison the cache with a response that executes `alert(1)` in the victim's browser.
 <br/>
-<br/>
 #### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - append `&cb=cache-buster` to the `GET /js/geolocate.js?callback=setCountryCookie` and observe that you get `X-Cache: miss`, which means that it's cache buster
 - Add `callback=alert(1)` to the `body` of the request and observe that it's reflected
@@ -226,7 +221,6 @@ GET /example?param=%22%3e%3ctest%3e
 
 <br/>
 - **Lab Description**: This lab contains an XSS vulnerability that is not directly exploitable due to browser URL-encoding. To solve the lab, take advantage of the cache's normalization process to exploit this vulnerability. Find the XSS vulnerability and inject a payload that will execute `alert(1)` in the victim's browser. Then, deliver the malicious URL to the victim.
-<br/>
 <br/>
 #### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - After identifying a cache oracle, I added `?cb=cache-buster` to the homepage, and I got a cache `miss` which means that it's a cache buster.
@@ -269,7 +263,6 @@ X-Cache: hit
 ```
 <br/>
 - **Lab Description**: This lab contains multiple independent vulnerabilities, including cache key injection. A user regularly visits this site's home page using Chrome. To solve the lab, combine the vulnerabilities to execute `alert(1)` in the victim's browser. Note that you will need to make use of the `Pragma: x-get-cache-key` header in order to solve this lab
-<br/>
 <br/>
 #### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - 
