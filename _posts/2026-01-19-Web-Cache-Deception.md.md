@@ -32,11 +32,11 @@ Caches may also use custom rules based on parameters or other logic.
 
 ---
 # Exploiting path mapping for web cache deception
-- path mapping discrepancies
+- ### path mapping discrepancies
 	- Static extension cache rules can be abused when the cache and origin server map URL paths differently (REST vs traditional). The origin may ignore extra path segments or extensions and still return dynamic data, while the cache may treat the same URL as a static file and cache it. For example, `http://example.com/user/123/profile/wcd.css`
 	- Origin (REST mapping):  Interprets it as `/user/123/profile` and returns the profile of user 123, ignoring `wcd.css`.
 	- Cache (static extension rule): Interprets it as a request for a `.css` file and caches the response because the path ends with `.css`.
-- Testing:
+- ### Testing:
 ```
 /api/orders/123        → dynamic response
 /api/orders/123/foo    → same dynamic response (origin ignores extra segment)
@@ -63,8 +63,7 @@ Caches may also use custom rules based on parameters or other logic.
 ----
 # Exploiting path delimiters for web cache deception
 Delimiter discrepancies occur when the cache and the origin server interpret certain characters differently as URL separators, leading to web cache deception.
-### Example 1:  
-`/profile;foo.css`  
+### Example 1 -->  `/profile;foo.css`  
 - The origin server (Java Spring) treats `;` as a delimiter and interprets the path as `/profile`, returning profile data.  
 - The cache treats the full path `/profile;foo.css` and may cache it as a `.css` file.
 <br/>
@@ -75,8 +74,7 @@ Delimiter discrepancies occur when the cache and the origin server interpret cer
 - `/profile.ico` → treated as HTML and returns profile data, but the cache may store it due to the `.ico` extension.
 <br/>
 
-### Example 3 (encoded delimiter):  
-`/profile%00foo.js`  
+### Example 3 (encoded delimiter) -->  `/profile%00foo.js`  
 - The origin server (OpenLiteSpeed) treats `%00` as a delimiter and interprets the path as `/profile`.  
 - The cache (e.g., Akamai/Fastly) may treat the full path and cache it as a `.js` file.
 <br/>
@@ -86,13 +84,11 @@ Delimiter discrepancies occur when the cache and the origin server interpret cer
 
 ## Delimiter decoding discrepancies
 Delimiter decoding discrepancies occur when the cache and the origin server decode URL-encoded delimiter characters differently, causing them to interpret the URL path in different ways and enabling web cache deception.
-
 ### Example 1:  
 `/profile%23wcd.css`
 - The origin server decodes `%23` to `#`, treats `#` as a delimiter, and interprets the path as `/profile`, returning profile data.  
 - The cache does not decode `%23`, interprets the full path `/profile%23wcd.css`, and may cache the response due to the `.css` extension.
 <br/>
-
 ### Example 2:  
 `/myaccount%3fwcd.css`
 - The cache applies rules on the encoded path `/myaccount%3fwcd.css`, matches the `.css` extension, and caches it. Then it decodes `%3f` to `?` and forwards `/myaccount?wcd.css` to the origin.  
