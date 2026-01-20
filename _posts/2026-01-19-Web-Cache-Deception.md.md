@@ -14,14 +14,12 @@ Web cache deception is a vulnerability that enables an attacker to trick a web c
 	3. 
 	4. The attacker can then request the same URL to access the cached response, gaining unauthorized access to private information.
 	![](../assets/img/Pasted%20image%2020260119024336.png)
-
 # Cache Rules
 Cache rules define what is cached and for how long, usually targeting static content. Web cache deception abuses how these rules match URL paths and file patterns, such as:
 - Static file extension rules (.css, .js)
 - Static directory rules (/static, /assets)
 - File name rules (robots.txt, favicon.ico)
 Caches may also use custom rules based on parameters or other logic.
-
 # Detecting cached responses
 - Check response headers and response time.
 - The `X-Cache` header can indicate cache behavior:
@@ -65,18 +63,19 @@ Caches may also use custom rules based on parameters or other logic.
 ----
 # Exploiting path delimiters for web cache deception
 Delimiter discrepancies occur when the cache and the origin server interpret certain characters differently as URL separators, leading to web cache deception.
-
-Example 1:  
+### Example 1:  
 `/profile;foo.css`  
 - The origin server (Java Spring) treats `;` as a delimiter and interprets the path as `/profile`, returning profile data.  
 - The cache treats the full path `/profile;foo.css` and may cache it as a `.css` file.
 <br/>
-Example 2 (Ruby on Rails using `.` as a delimiter):  
+
+### Example 2 (Ruby on Rails using `.` as a delimiter):  
 - `/profile` → returns profile (HTML)  
 - `/profile.css` → error (no CSS formatter)  
 - `/profile.ico` → treated as HTML and returns profile data, but the cache may store it due to the `.ico` extension.
 <br/>
-Example 3 (encoded delimiter):  
+
+### Example 3 (encoded delimiter):  
 `/profile%00foo.js`  
 - The origin server (OpenLiteSpeed) treats `%00` as a delimiter and interprets the path as `/profile`.  
 - The cache (e.g., Akamai/Fastly) may treat the full path and cache it as a `.js` file.
@@ -88,16 +87,18 @@ Example 3 (encoded delimiter):
 ## Delimiter decoding discrepancies
 Delimiter decoding discrepancies occur when the cache and the origin server decode URL-encoded delimiter characters differently, causing them to interpret the URL path in different ways and enabling web cache deception.
 
-Example 1:  
+### Example 1:  
 `/profile%23wcd.css`
 - The origin server decodes `%23` to `#`, treats `#` as a delimiter, and interprets the path as `/profile`, returning profile data.  
 - The cache does not decode `%23`, interprets the full path `/profile%23wcd.css`, and may cache the response due to the `.css` extension.
 <br/>
-Example 2:  
+
+### Example 2:  
 `/myaccount%3fwcd.css`
 - The cache applies rules on the encoded path `/myaccount%3fwcd.css`, matches the `.css` extension, and caches it. Then it decodes `%3f` to `?` and forwards `/myaccount?wcd.css` to the origin.  
 - The origin treats `?` as a delimiter and interprets the path as `/myaccount`, returning sensitive dynamic data that is now cached.
 <br/>
+
 - **Also test encoded non-printable delimiters such as `%00`, `%0A`, and `%09`, which may truncate the path after decoding.**
 <br/>
 - **Lab Description**: To solve the lab, find the API key for the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`.
