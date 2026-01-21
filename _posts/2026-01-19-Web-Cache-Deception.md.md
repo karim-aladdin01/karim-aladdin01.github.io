@@ -105,7 +105,7 @@ Delimiter decoding discrepancies occur when the cache and the origin server deco
 # Exploiting origin server normalization for web cache deception
 Static directory cache rules target URL prefixes like `/static`, `/assets`, `/scripts`, or `/images` to cache static files, but they can be abused using path traversal and normalization differences between the cache and the origin server.
 
-Normalization means converting the URL path to a standard form by decoding characters and resolving dot-segments (..). If the cache and origin server normalize differently, the same URL can be interpreted in two ways.  
+<span style="color:rgb(255, 255, 0)">Normalization means converting the URL path to a standard form by decoding characters and resolving dot-segments (..). If the cache and origin server normalize differently, the same URL can be interpreted in two ways. </span> 
 - ### Example: `/static/..%2fprofile`
 	- The origin server decodes %2f to / and resolves .., so it sees the path as /profile and returns profile data.
 	- The cache does not decode or resolve it, so it sees /static/..%2fprofile. Because it starts with /static, it applies the static directory rule and caches the response.
@@ -200,21 +200,7 @@ File name cache rules target specific common files like `robots.txt`, `index.htm
 ```
 - Send the request from burp and you should see 
 	![](../assets/img/Pasted%20image%2020260121024525.png)
-- Now, extract the `CSRF token` from the response to use it with the `POST /my-account/change-email` request, then craft a CSRF POC as follows and deliver it to the victim.
-```html
-<html>
-  <body>
-    <form action="https://0ab300990434d6bc81616133005e0061.web-security-academy.net/my-account/change-email" method="POST">
-      <input type="hidden" name="email" value="attacker@test.com">
-      <input type="hidden" name="csrf" value="nd9Az13NtCJdFvZkP1lke9DCy7dQU475">
-    </form>
-
-    <script>
-      document.forms[0].submit();
-    </script>
-  </body>
-</html>
-```
+- Now, extract the `CSRF token` from the response to use it with the `POST /my-account/change-email` request, then craft a CSRF POC and deliver it to the victim.
 
 ----
 # Preventing web cache deception vulnerabilities
