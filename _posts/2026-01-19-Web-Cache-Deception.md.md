@@ -2,9 +2,13 @@
 title: Web Cache Deception
 categories:
   - PortSwigger
-order: 2
 tags:
+  - Web Appsec
+  - PortSwigger
+order: 2
+icon: https://miro.medium.com/1*lWmY9SfoCf2x7uJ9NJkf0g.jpeg
 ---
+
 # What's web Cache Deception?
 Web cache deception is a vulnerability that enables an attacker to trick a web cache into storing sensitive, dynamic content. It's caused by discrepancies between how the cache server and origin server handle requests.
 

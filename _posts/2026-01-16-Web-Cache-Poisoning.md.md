@@ -1,9 +1,12 @@
 ---
-title:  Web Cache Poisoning
-categories: [PortSwigger]
-tags: [Web Appsec, PortSwigger]
+title: Web Cache Poisoning
+categories:
+  - PortSwigger
+tags:
+  - Web Appsec
+  - PortSwigger
 order: 1
-icon: fas fa-info-circle
+icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVuurG-joAeduhawS3OkUGUzC3wAm-sSUZOA&s
 ---
 # How Does Cache Work?
 
