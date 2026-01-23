@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/2026-01-19-Web-Cache-Deception.md.md",
+                "file": "_posts/2026-01-23-JWT-Attacks.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-01-19-Web-Cache-Deception.md"
+              "title": "2026-01-23-JWT-Attacks.md"
             }
           },
           {
@@ -27,15 +27,16 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
+                "file": "_posts/2026-01-23-JWT-Attacks.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-01-16-Web-Cache-Poisoning.md"
+              "title": "2026-01-23-JWT-Attacks.md"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -198,10 +199,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "1a7ece6f44ebca83",
+  "active": "a31d25e12913f580",
   "lastOpenFiles": [
-    "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
     "_posts/2026-01-19-Web-Cache-Deception.md.md",
+    "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
+    "_posts/2026-01-23-JWT-Attacks.md.md",
     "assets/img/Pasted image 20260121024525.png",
     "assets/img/Pasted image 20260121024207.png",
     "assets/img/Pasted image 20260121023419.png",

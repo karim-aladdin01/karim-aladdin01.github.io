@@ -6,7 +6,7 @@ tags:
   - Web Appsec
   - PortSwigger
 order: 2
-icon: https://miro.medium.com/1*lWmY9SfoCf2x7uJ9NJkf0g.jpeg
+icon:
 ---
 
 # What's web Cache Deception?

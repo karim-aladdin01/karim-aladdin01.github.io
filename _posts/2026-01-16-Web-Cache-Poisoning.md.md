@@ -6,7 +6,7 @@ tags:
   - Web Appsec
   - PortSwigger
 order: 1
-icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVuurG-joAeduhawS3OkUGUzC3wAm-sSUZOA&s
+icon:
 ---
 # How Does Cache Work?
 
