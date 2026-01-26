@@ -34,9 +34,21 @@
               "icon": "lucide-file",
               "title": "2026-01-23-JWT-Attacks.md"
             }
+          },
+          {
+            "id": "2d9b173137334713",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.5"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.5"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -199,7 +211,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "a31d25e12913f580",
+  "active": "2d9b173137334713",
   "lastOpenFiles": [
     "_posts/2026-01-19-Web-Cache-Deception.md.md",
     "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
