@@ -1,5 +1,5 @@
 ---
-title: Web Cache Deception
+title: JWT Attacks
 categories: PortSwigger
 tags:
   - Web Appsec
