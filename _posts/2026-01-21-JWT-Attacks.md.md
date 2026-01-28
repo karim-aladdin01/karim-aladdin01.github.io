@@ -218,4 +218,3 @@ If the server uses the kid value to load a key from the filesystem and doesn’t
 - From the response, open `/admin/delete?username=carlos` to complete the lab.
 
 ---
-
