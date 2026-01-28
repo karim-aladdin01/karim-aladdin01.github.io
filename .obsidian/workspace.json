@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/2026-01-23-JWT-Attacks.md.md",
+                "file": "_posts/2026-01-19-Web-Cache-Deception.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-01-23-JWT-Attacks.md"
+              "title": "2026-01-19-Web-Cache-Deception.md"
             }
           },
           {
@@ -33,18 +33,6 @@
               },
               "icon": "lucide-file",
               "title": "2026-01-21-JWT-Attacks.md"
-            }
-          },
-          {
-            "id": "2d9b173137334713",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.11.5"
-              },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.11.5"
             }
           }
         ],
@@ -213,19 +201,20 @@
   },
   "active": "a31d25e12913f580",
   "lastOpenFiles": [
+    "assets/img/Pasted image 20260128044042.png",
+    "assets/img/Pasted image 20260128043557.png",
+    "assets/img/Pasted image 20260128043114.png",
+    "assets/img/Pasted image 20260128030323.png",
+    "assets/img/Pasted image 20260128014715.png",
+    "assets/img/Pasted image 20260128014457.png",
     "_posts/2026-01-19-Web-Cache-Deception.md.md",
-    "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
     "_posts/2026-01-21-JWT-Attacks.md.md",
+    "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
     "assets/img/Pasted image 20260121024525.png",
     "assets/img/Pasted image 20260121024207.png",
     "assets/img/Pasted image 20260121023419.png",
     "assets/img/Pasted image 20260121010610.png",
     "assets/img/Pasted image 20260120233732.png",
-    "assets/img/Pasted image 20260120233450.png",
-    "assets/img/Pasted image 20260119040852.png",
-    "assets/img/Pasted image 20260119040503.png",
-    "assets/img/Pasted image 20260119040257.png",
-    "assets/img/Pasted image 20260119024336.png",
     "assets/img",
     "_tabs/categories.md",
     "README.md"
