@@ -8,11 +8,11 @@ tags:
 order: 3
 ---
 
-# What's the difference between JWTs and sessions?
+## What's the difference between JWTs and sessions?
 Unlike with classic session tokens, all of the data that a server needs is stored client-side within the JWT itself. This makes JWTs a popular choice for highly distributed websites where users need to interact seamlessly with multiple back-end servers.
 
 ---
-# Exploiting flawed JWT signature verification
+## Exploiting flawed JWT signature verification
 JWTs are self-contained, meaning the server usually does not store any state about issued tokens. so if the server doesn’t properly verify the signature, attackers can modify the token. Example:
 ```json
 {  
@@ -27,7 +27,7 @@ A common bug is using `decode()` instead of `verify()` (e.g., in jsonwebtoken). 
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. Due to implementation flaws, the server doesn't verify the signature of any JWTs that it receives. To solve the lab, modify your session token to gain access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
-## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - After logging in as `wiener`, try to access the `/admin` endpoint, but you get `Admin interface only available if logged in as an administrator`
 - Send the `/admin` to `Repater` and edit the `"sub":"wiener"` to `"sub":"administrator"` and hit `Apply Changes` them `Send`
 	![](../assets/img/Pasted%20image%2020260128014457.png)
@@ -36,7 +36,7 @@ A common bug is using `decode()` instead of `verify()` (e.g., in jsonwebtoken). 
 - Edit the request to `/admin/delete?username=carlos` and hit `Send` to solve the lab.
 
 ---
-# JWT authentication bypass via flawed signature verification
+## JWT authentication bypass via flawed signature verification
 JWT header has an alg field that tells the server how to verify the signature, for example:  
 ```json
 {  
@@ -51,7 +51,7 @@ Some servers try to block this, but weak string checks can be bypassed using tri
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. The server is insecurely configured to accept unsigned JWTs. To solve the lab, modify your session token to gain access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
-## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - You need to change 3 things in the JWT token:
 ```json
 "alg":"RS256" --> "alg":"none"
@@ -64,7 +64,7 @@ Remove the signature leaving the trailing dot
 - Edit the request to `/admin/delete?username=carlos` and hit `Send` to solve the lab.
 
 ---
-# JWT authentication bypass via weak signing key
+## JWT authentication bypass via weak signing key
 Some JWT algorithms like HS256 use a secret key. If this key is weak, default, or hardcoded, an attacker can brute-force it and then sign their own tokens with any data they want. 
 - Example: using hashcat with a known JWT and a wordlist:  
 `hashcat -a 0 -m 16500 <jwt> <wordlist>`
@@ -72,7 +72,7 @@ Some JWT algorithms like HS256 use a secret key. If this key is weak, default, o
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. It uses an extremely weak secret key to both sign and verify tokens. This can be easily brute-forced using a [wordlist of common secrets](https://github.com/wallarm/jwt-secrets/blob/master/jwt.secrets.list).To solve the lab, first brute-force the website's secret key. Once you've obtained this, use it to sign a modified session token that gives you access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
-## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - After logging in as `wiener`, from burp try to access the `/admin` and observe that you can't, we can brute force the `secret key` that was used to sign the jwt token and use it to forge a new one. We can crack the signature using various tool such as `jwt_tool` or `hachcat` 
 ```bash
 jwt_tool "eyJraWQiOiJmYTJjMWY0Mi01Y2M0LTRhNmEtOTJlOS00Y2U0MTI0NjNjNTMiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJwb3J0c3dpZ2dlciIsImV4cCI6MTc2OTU2ODA3NSwic3ViIjoid2llbmVyIn0.0HzimWHpykPLjiL5LLox65oNpA0rOmDiRudU_tSxNn8" -C -d jwt.secrets.list
@@ -86,7 +86,7 @@ jwt_tool "eyJraWQiOiJmYTJjMWY0Mi01Y2M0LTRhNmEtOTJlOS00Y2U0MTI0NjNjNTMiLCJhbGciOi
 - Hit `Send` and you receive `200 Ok` and follow the steps in the previous labs to solve it
 
 ---
-# JWT header parameter injections
+## JWT header parameter injections
 According to the JWS specification, only the `alg` header parameter is mandatory. In practice, however, JWT headers (also known as JOSE headers) often contain several other parameters. The following ones are of particular interest to attackers.
 - `jwk` (JSON Web Key) - Provides an embedded JSON object representing the key.
 - `jku` (JSON Web Key Set URL) - Provides a URL from which servers can fetch a set of keys containing the correct key.
@@ -95,7 +95,7 @@ According to the JWS specification, only the `alg` header parameter is mandatory
 As you can see, these user-controllable parameters each tell the recipient server which key to use when verifying the signature. In this section, you'll learn how to exploit these to inject modified JWTs signed using your own arbitrary key rather than the server's secret.
 
 ---
-# JWT authentication bypass via jwk header injection
+## JWT authentication bypass via jwk header injection
 Some servers accept the public key directly from the JWT itself using the jwk header instead of verifying the signature against a trusted key store. This allows an attacker to create a self-signed token and make the server trust it. A JWT header with embedded public key looks like:
 ```json
 {  
@@ -120,12 +120,12 @@ Some servers accept the public key directly from the JWT itself using the jwk he
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. The server supports the `jwk` parameter in the JWT header. This is sometimes used to embed the correct verification key directly in the token. However, it fails to check whether the provided key came from a trusted source. To solve the lab, modify and sign a JWT that gives you access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
-## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - After logging in as `Wiener` and trying to access the `/admin` endpoint, you get `401 Unauthorized`.
 - Follow the above steps to solve the lab.
 
 ---
-# JWT authentication bypass via jku header injection
+## JWT authentication bypass via jku header injection
 Some servers use the jku (JWK Set URL) header in a JWT to tell them where to download the public key used to verify the signature. Instead of trusting a fixed key, they fetch a JWK Set from the provided URL and use the key with the matching kid. A JWK Set is a JSON object that contains multiple public keys, for example:  
 ```json
 {  
@@ -155,7 +155,7 @@ Some servers use the jku (JWK Set URL) header in a JWT to tell them where to dow
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. The server supports the `jku` parameter in the JWT header. However, it fails to check whether the provided URL belongs to a trusted domain before fetching the key. To solve the lab, forge a JWT that gives you access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
-## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - Go to `JWt Editor` tab and generate a `New RSA Key`(you don't need to select a key size as this will automatically be updated later), then right-click on the generated key and select `Copy Public Key as JWK`
 - Go to the exploit server and paste the copied text in the following template, then store it
 ```json
@@ -186,7 +186,7 @@ Some servers use the jku (JWK Set URL) header in a JWT to tell them where to dow
 	![](../assets/img/Pasted%20image%2020260128065335.png)
 
 ---
-# JWT authentication bypass via kid header path traversal
+## JWT authentication bypass via kid header path traversal
 Some servers use the kid (Key ID) header in a JWT to decide which key to use for signature verification. The kid is just an arbitrary string, so developers might use it to reference a <span style="color:rgb(0, 112, 192)">database entry</span>, a <span style="color:rgb(0, 112, 192)">JWK in a set</span>, or even a <span style="color:rgb(0, 112, 192)">file path</span>.
 
 If the server uses the kid value to load a key from the filesystem and doesn’t properly sanitize it, this can lead to <span style="color:rgb(0, 112, 192)">path traversal</span>. An attacker can make the server load an arbitrary file as the verification key. Example JWT header:  
@@ -203,7 +203,7 @@ If the server uses the kid value to load a key from the filesystem and doesn’t
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. In order to verify the signature, the server uses the `kid` parameter in JWT header to fetch the relevant key from its filesystem. To solve the lab, forge a JWT that gives you access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
-## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+### 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
 - Log in to your account and send the **GET /my-account** request to Repeater.
 - Change the path to **/admin** and confirm it requires admin access (Returns `401 Unauthorized`)
 - Open **JWT Editor → Keys** and create a **New Symmetric Key**.
