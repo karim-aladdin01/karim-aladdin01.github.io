@@ -151,7 +151,7 @@ Some servers use the jku (JWK Set URL) header in a JWT to tell them where to dow
 	2. Create a JWT signed with the matching private key.
     3. Set the jku header to their malicious JWK Set URL.
     4. Set kid to match one of the keys in that set.
-
+- More secure websites will only fetch keys from trusted domains, but you can sometimes take advantage of URL parsing discrepancies to bypass this kind of filtering. We covered some [examples of these](https://portswigger.net/web-security/ssrf#ssrf-with-whitelist-based-input-filters) in our topic on SSRF.
 <br/>
 - **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. The server supports the `jku` parameter in the JWT header. However, it fails to check whether the provided URL belongs to a trusted domain before fetching the key. To solve the lab, forge a JWT that gives you access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
 <br/>
@@ -166,13 +166,13 @@ Some servers use the jku (JWK Set URL) header in a JWT to tell them where to dow
 ```
 - Go to the `JSOn Web Token` generated tab in the Repeater and update:
 	- header
-```json
+	```json
 {  
     "kid": "2600ff2a-5928-41a0-8e13-5bd604648993",  
     "alg": "RS256",  
     "jku": "https://exploit-0a2c002603dbcd6f82ecc41c01540071.exploit-server.net/exploit"  
 }
-```
+	```
 	- payload
 ```json
 {  
@@ -182,3 +182,40 @@ Some servers use the jku (JWK Set URL) header in a JWT to tell them where to dow
 }
 ```
 **Note**: `kid` is updated to match the `kid` of our generated `RSA key` 
+- Sign it with our generated `RSA key` and hit `Send`, you gonna receive `200 Ok`
+	![](../assets/img/Pasted%20image%2020260128065335.png)
+
+---
+# JWT authentication bypass via kid header path traversal
+Some servers use the kid (Key ID) header in a JWT to decide which key to use for signature verification. The kid is just an arbitrary string, so developers might use it to reference a <span style="color:rgb(0, 112, 192)">database entry</span>, a <span style="color:rgb(0, 112, 192)">JWK in a set</span>, or even a <span style="color:rgb(0, 112, 192)">file path</span>.
+
+If the server uses the kid value to load a key from the filesystem and doesn’t properly sanitize it, this can lead to <span style="color:rgb(0, 112, 192)">path traversal</span>. An attacker can make the server load an arbitrary file as the verification key. Example JWT header:  
+```json
+{  
+"kid": "../../path/to/file",  
+"typ": "JWT",  
+"alg": "HS256",  
+"k": "asGsADas3421-dfh9DGN-AFDFDbasfd8-anfjkvc"  
+}
+```
+- The attacker can set the kid to a predictable file on the server and use its known contents as the HMAC secret to sign a forged JWT.
+- A simple example is pointing kid to `/dev/null` on Linux, which is an empty file, so its content is an empty string. If the server uses it as the HMAC key, signing the JWT with an empty string will produce a valid signature.
+<br/>
+- **Lab Description**: This lab uses a JWT-based mechanism for handling sessions. In order to verify the signature, the server uses the `kid` parameter in JWT header to fetch the relevant key from its filesystem. To solve the lab, forge a JWT that gives you access to the admin panel at `/admin`, then delete the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`
+<br/>
+## 💡 <span style="color:rgb(0, 176, 80)">Solution</span>
+- Log in to your account and send the **GET /my-account** request to Repeater.
+- Change the path to **/admin** and confirm it requires admin access (Returns `401 Unauthorized`)
+- Open **JWT Editor → Keys** and create a **New Symmetric Key**.
+- Generate a key in JWK format, then replace the value of **k** with `AA==` (Base64 for null byte). this is just a workaround because the JWT Editor extension won't allow you to sign tokens using an empty string.
+	![](../assets/img/Pasted%20image%2020260128071555.png)
+- Go back to the **GET /admin** request and open the JWT editor tab.
+- In the JWT header, change **kid** to `../../../../../../../dev/null`
+- In the payload, change **sub** to: `administrator`
+	![](../assets/img/Pasted%20image%2020260128072046.png)
+- Click **Sign**, select the generated symmetric key, keep **Don't modify header** enabled, and confirm.
+- Send the request and verify admin panel access.
+- From the response, open `/admin/delete?username=carlos` to complete the lab.
+
+---
+
