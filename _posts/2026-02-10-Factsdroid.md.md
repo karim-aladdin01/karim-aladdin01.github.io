@@ -22,7 +22,6 @@ At no point are you allowed to modify the “request” sent to the backend serv
 
 ---
 ## <span style="color:rgb(0, 176, 80)">Walkthrough</span>
-
 - After reversing the apk using jadx-gui and analyzing the source code and `AndroidManifest.xml` file, it seems that it's a flutter application as show in the screenshot:
 	![](../assets/img/Pasted%20image%2020260210000210.png)
 - Flutter apps have a different approach rather than the java native or Kotlin apps as they are non-proxy aware applications, which means they don't adhere to the system's proxy settings or use the system's certificate store.
