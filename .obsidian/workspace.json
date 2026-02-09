@@ -27,16 +27,28 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/2026-01-21-JWT-Attacks.md.md",
+                "file": "_posts/Untitled.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-01-21-JWT-Attacks.md"
+              "title": "Untitled"
+            }
+          },
+          {
+            "id": "0842056000abd5cf",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.7"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.7"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -199,8 +211,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "a31d25e12913f580",
+  "active": "0842056000abd5cf",
   "lastOpenFiles": [
+    "_posts/2026-01-21-JWT-Attacks.md.md",
+    "_posts/Untitled.md",
     "assets/img/Pasted image 20260128072046.png",
     "assets/img/Pasted image 20260128071555.png",
     "assets/img/Pasted image 20260128065335.png",
@@ -211,10 +225,8 @@
     "assets/img/Pasted image 20260128014715.png",
     "assets/img/Pasted image 20260128014457.png",
     "_posts/2026-01-19-Web-Cache-Deception.md.md",
-    "_posts/2026-01-21-JWT-Attacks.md.md",
     "_posts/2026-01-16-Web-Cache-Poisoning.md.md",
     "assets/img/Pasted image 20260121024525.png",
-    "assets/img/Pasted image 20260121024207.png",
     "assets/img",
     "_tabs/categories.md",
     "README.md"
