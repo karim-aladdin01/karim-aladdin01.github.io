@@ -1,5 +1,5 @@
 ---
-title: Factdroid
+title: Factsdroid
 categories: 8kSec
 tags:
   - Mobile Appsec
@@ -21,6 +21,8 @@ Your solution must work <span style="color:rgb(255, 0, 0)">without statically mo
 At no point are you allowed to modify the “request” sent to the backend server. Exploiting the backend server is out of scope for this challenge. Response manipulation is fair game.
 
 ---
+## <span style="color:rgb(0, 176, 80)">Walkthrough</span>
+
 - After reversing the apk using jadx-gui and analyzing the source code and `AndroidManifest.xml` file, it seems that it's a flutter application as show in the screenshot:
 	![](../assets/img/Pasted%20image%2020260210000210.png)
 - Flutter apps have a different approach rather than the java native or Kotlin apps as they are non-proxy aware applications, which means they don't adhere to the system's proxy settings or use the system's certificate store.
@@ -48,10 +50,10 @@ frida -l .\root-bypass.js --codeshare TheDauntless/disable-flutter-tls-v1 -Uf co
 <br/>
 - It really worked and we are able to fetch the api, but we still can't see the traffic through burp. Here where the [vpn rethink app](https://github.com/celzero/rethink-app) comes into play. Install it and configure it as follows:
 1.  Navigate to proxy tab
-	![](../assets/img/Pasted%20image%2020260210005535.png)
+![](../assets/img/Pasted%20image%2020260210005535.png)
 
 2. Setup a HTTP(S) CONNECT proxy as `host_ip:8080`
-	![](../assets/img/Pasted%20image%2020260210005725.png)
+![](../assets/img/Pasted%20image%2020260210005725.png)
 
 3. Navigate to `Configure --> DNS` and change the `Type` from `Rethink DNS` to `System DNS`
 	![](../assets/img/Pasted%20image%2020260210005923.png)
