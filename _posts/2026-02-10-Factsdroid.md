@@ -52,6 +52,7 @@ frida -l .\root-bypass.js --codeshare TheDauntless/disable-flutter-tls-v1 -Uf co
 ![](../assets/img/Pasted%20image%2020260210005535.png)
 
 2. Setup a HTTP(S) CONNECT proxy as `host_ip:8080`
+<br/>
 ![](../assets/img/Pasted%20image%2020260210005725.png)
 
 3. Navigate to `Configure --> DNS` and change the `Type` from `Rethink DNS` to `System DNS`
